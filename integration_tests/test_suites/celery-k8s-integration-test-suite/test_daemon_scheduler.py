@@ -49,7 +49,7 @@ def test_execute_schedule_on_celery_k8s(  # pylint: disable=redefined-outer-name
 
         finally:
             dagster_instance_for_daemon.stop_schedule_and_update_storage_state(
-                reoriginated_schedule.get_external_origin_id()
+                reoriginated_schedule.get_external_origin_id(), reoriginated_schedule
             )
 
         last_run = schedule_runs[0]
