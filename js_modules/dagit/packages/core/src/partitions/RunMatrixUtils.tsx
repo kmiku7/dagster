@@ -1,7 +1,6 @@
+import {ColorsWIP} from '@dagit/ui';
 import * as React from 'react';
 import styled from 'styled-components/macro';
-
-import {ColorsWIP} from '../ui/Colors';
 
 export const BOX_SIZE = 32;
 

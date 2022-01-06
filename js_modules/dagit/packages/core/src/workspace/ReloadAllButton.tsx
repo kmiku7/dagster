@@ -1,9 +1,7 @@
+import {ButtonWIP, IconWIP, Tooltip} from '@dagit/ui';
 import * as React from 'react';
 
 import {DISABLED_MESSAGE, usePermissions} from '../app/Permissions';
-import {ButtonWIP} from '../ui/Button';
-import {IconWIP} from '../ui/Icon';
-import {Tooltip} from '../ui/Tooltip';
 
 import {useReloadWorkspace} from './useReloadWorkspace';
 

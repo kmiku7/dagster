@@ -1,10 +1,7 @@
 import {Collapse} from '@blueprintjs/core';
+import {ColorsWIP, IconWIP, FontFamily} from '@dagit/ui';
 import * as React from 'react';
 import styled from 'styled-components/macro';
-
-import {ColorsWIP} from '../ui/Colors';
-import {IconWIP} from '../ui/Icon';
-import {FontFamily} from '../ui/styles';
 
 interface ISidebarSectionProps {
   title: string;

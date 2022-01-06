@@ -1,10 +1,8 @@
+import {Box, ButtonWIP, DialogBody, DialogFooter, DialogWIP} from '@dagit/ui';
 import * as React from 'react';
 
 import {PythonErrorInfo} from '../app/PythonErrorInfo';
 import {PythonErrorFragment} from '../app/types/PythonErrorFragment';
-import {Box} from '../ui/Box';
-import {ButtonWIP} from '../ui/Button';
-import {DialogBody, DialogFooter, DialogWIP} from '../ui/Dialog';
 
 interface Props {
   location: string;

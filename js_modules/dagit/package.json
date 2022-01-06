@@ -6,9 +6,9 @@
     "build": "yarn workspace @dagit/app build && yarn post-build",
     "build-with-profiling": "yarn workspace @dagit/app build --profile && yarn post-build",
     "post-build": "cd ../../python_modules/dagit/dagit && rm -rf webapp && mkdir -p webapp && cp -r ../../../js_modules/dagit/packages/app/build ./webapp/ && mkdir -p webapp/build/vendor && cp -r graphql-playground ./webapp/build/vendor",
-    "lint": "yarn workspace @dagit/app lint && yarn workspace @dagit/core lint",
+    "lint": "yarn workspace @dagit/app lint && yarn workspace @dagit/core lint && yarn workspace @dagit/ui lint",
     "start": "yarn workspace @dagit/app start",
-    "ts": "yarn workspace @dagit/app ts"
+    "ts": "yarn workspace @dagit/app ts && yarn workspace @dagit/ui ts"
   },
   "workspaces": {
     "packages": [

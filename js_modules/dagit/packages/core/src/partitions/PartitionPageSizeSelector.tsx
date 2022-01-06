@@ -1,6 +1,5 @@
+import {ButtonGroup, ButtonGroupItem} from '@dagit/ui';
 import * as React from 'react';
-
-import {ButtonGroup, ButtonGroupItem} from '../ui/ButtonGroup';
 
 type Size = '7' | '30' | '120' | 'All';
 

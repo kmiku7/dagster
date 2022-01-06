@@ -1,8 +1,6 @@
+import {ColorsWIP, FontFamily} from '@dagit/ui';
 import * as React from 'react';
 import styled from 'styled-components/macro';
-
-import {ColorsWIP} from '../ui/Colors';
-import {FontFamily} from '../ui/styles';
 
 export interface IOpTag {
   label: string;

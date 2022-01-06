@@ -1,4 +1,4 @@
-import {Toaster} from '../ui/Toaster';
+import {Toaster} from '@dagit/ui';
 
 export const SharedToaster = Toaster.create({position: 'top'}, document.body);
 

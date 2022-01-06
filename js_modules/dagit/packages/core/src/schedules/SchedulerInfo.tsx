@@ -1,7 +1,7 @@
+import {Alert} from '@dagit/ui';
 import * as React from 'react';
 
 import {DaemonHealthFragment} from '../instance/types/DaemonHealthFragment';
-import {Alert} from '../ui/Alert';
 
 export const SchedulerInfo: React.FunctionComponent<{
   daemonHealth: DaemonHealthFragment | undefined;
