@@ -14,7 +14,8 @@ MAX_NUM = sys.maxsize
 
 
 class LeafIgnoredNode:
-    """Marker for no further nesting ignore needed."""
+    """Marker for leaf node in ignored_solids_dict. It indicates the entire node is not selected and
+    will be ignored in config validations."""
 
 
 class OpSelectionData(
@@ -33,9 +34,29 @@ class OpSelectionData(
     Attributes:
         op_selection (List[str]): The queries of op selection.
         resolved_op_selection (AbstractSet[str]): The names of selected ops.
-        ignored_solids_dict (Dict[Union[Node, str], Dict]): The nodes in the original full graph but
-            outside the current selection. Nested selection supported.
+        ignored_solids_dict (Dict[Union[Node, str], Union[dict, Type[LeafIgnoredNode]]]): The dict
+            that represents nodes in the original full graph but outside the current selection, keyed
+            by either
+            * the Node object (when the node itself is unselected): the value will be LeafIgnoredNode,
+                meaning no nested selection inside.
+            * the name of the node (when anything inside the node is unselected): the value will be
+                a recursive dict for ignored nodes inside the node.
+
             This is used in run config resolution to handle unsatisfied inputs and config mapping correctly.
+
+            For example:
+            ```
+            ignored_solids_dict = {
+                Node("my_op", ...): LeafIgnoredNode,
+                "my_graph": {
+                    Node("my_op", ...): LeafIgnoredNode
+                },
+            }
+            ```
+            "my_op" is the top-level op node in the job and will be ignored entirely in config validation,
+            "my_graph" is the top-level graph node where its child node `my_graph.my_op` will be ignored.
+            We won't ignore "my_graph" entirely bc some other selected nodes in that graph may be selected.
+
         parent_job_def (JobDefinition): The definition of the full job. This is used for constructing
             pipeline snapshot lineage.
     """
