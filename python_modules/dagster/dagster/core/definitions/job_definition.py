@@ -13,10 +13,10 @@ from dagster.core.definitions.dependency import (
     NodeInvocation,
     SolidOutputHandle,
 )
-from dagster.core.definitions.node_definition import NodeDefinition
 from dagster.core.definitions.policy import RetryPolicy
 from dagster.core.errors import DagsterInvalidDefinitionError, DagsterInvalidSubsetError
 from dagster.core.selector.subset_selector import (
+    LeafIgnoredNode,
     LeafNodeSelection,
     OpSelectionData,
     parse_op_selection,
@@ -192,13 +192,9 @@ class JobDefinition(PipelineDefinition):
         op_selection = check.opt_list_param(op_selection, "op_selection", str)
 
         resolved_op_selection_dict = parse_op_selection(self, op_selection)
-
-        sub_graph = _get_graph_definition(self.graph, resolved_op_selection_dict)
-
-        # TODO: config mapping - ignore unselected nested nodes
-        ignored_solids = [
-            solid for solid in self.graph.solids if not sub_graph.has_solid_named(solid.name)
-        ]
+        sub_graph, ignored_solids_dict = _get_graph_definition(
+            self.graph, resolved_op_selection_dict
+        )
 
         return JobDefinition(
             name=self.name,
@@ -216,7 +212,7 @@ class JobDefinition(PipelineDefinition):
                 resolved_op_selection=set(
                     resolved_op_selection_dict.keys()
                 ),  # equivalent to solids_to_execute
-                ignored_solids=ignored_solids,  # used by config resolution
+                ignored_solids_dict=ignored_solids_dict,  # used by config resolution
                 parent_job_def=self,  # used by pipeline snapshot lineage
             ),
         )
@@ -310,7 +306,8 @@ def _get_graph_definition(
         Dict[str, IDependencyDefinition],
     ] = {}
 
-    selected_nodes: List[NodeDefinition] = []
+    selected_nodes: List[Node] = []
+    ignored_solids_dict: Dict[Union[Node, str], Union[dict, Type[LeafIgnoredNode]]] = {}
 
     for node in graph.solids_in_topological_order:
         node_handle = NodeHandle(node.name, parent=parent_handle)
@@ -320,15 +317,25 @@ def _get_graph_definition(
 
         # rebuild graph if any nodes inside the graph are selected
         if node.is_graph and resolved_op_selection_dict[node.name] is not LeafNodeSelection:
-            definition = _get_graph_definition(
+            sub_definition, sub_ignored_solids_dict = _get_graph_definition(
                 node.definition,
                 resolved_op_selection_dict[node.name],
                 parent_handle=node_handle,
             )
+            ignored_solids_dict[node.name] = sub_ignored_solids_dict
+            # build a new node using the subsetted definition
+            selected_node = Node(
+                name=node.name,
+                definition=sub_definition,
+                graph_definition=node.graph_definition,
+                tags=node.tags,
+                hook_defs=node.hook_defs,
+                retry_policy=node.retry_policy,
+            )
         # use definition if the node as a whole is selected. this includes selecting the entire graph
         else:
-            definition = node.definition
-        selected_nodes.append(definition)
+            selected_node = node
+        selected_nodes.append(selected_node)
 
         # build dependencies for the node. we do it for both cases because nested graphs can have
         # inputs and outputs too
@@ -386,15 +393,23 @@ def _get_graph_definition(
         )
     )
 
+    # construct ignored solids for config resolution later
+    for solid in graph.solids:
+        if solid.name not in [node.name for node in selected_nodes]:
+            ignored_solids_dict[solid] = LeafIgnoredNode
+
     try:
-        return GraphDefinition(
-            name=graph.name,
-            dependencies=deps,
-            node_defs=selected_nodes,
-            input_mappings=new_input_mappings,
-            output_mappings=new_output_mappings,
-            config=graph.config_mapping,
-            description=None,
+        return (
+            GraphDefinition(
+                name=graph.name,
+                dependencies=deps,
+                node_defs=[node.definition for node in selected_nodes],
+                input_mappings=new_input_mappings,
+                output_mappings=new_output_mappings,
+                config=graph.config_mapping,
+                description=None,
+            ),
+            ignored_solids_dict,
         )
     except DagsterInvalidDefinitionError as exc:
         # This handles the case when you construct a subset such that an unsatisfied
